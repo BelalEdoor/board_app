@@ -1,7 +1,8 @@
 import { db } from './firebase'
-import { ref, push, onValue, update, remove, get, query, orderByChild } from 'firebase/database'
+import { ref, push, onValue, update, remove, get, query, orderByChild, set } from 'firebase/database'
 
 const TTL_MS = 24 * 60 * 60 * 1000
+const MAX_USERS = 2
 
 export function subscribeCards(onChange) {
   const cardsRef = query(ref(db, 'cards'), orderByChild('createdAt'))
@@ -23,6 +24,19 @@ export function subscribeCards(onChange) {
   return unsub
 }
 
+// Check if registration is allowed (max 2 users)
+export async function canRegister() {
+  const snap = await get(ref(db, 'users'))
+  if (!snap.exists()) return true
+  const count = Object.keys(snap.val()).length
+  return count < MAX_USERS
+}
+
+// Save user to DB on register
+export async function saveUser(uid, name, email) {
+  await set(ref(db, `users/${uid}`), { name, email, createdAt: Date.now() })
+}
+
 export async function addCard(card) {
   await push(ref(db, 'cards'), {
     ...card,
@@ -30,6 +44,14 @@ export async function addCard(card) {
     likes: {},
     reactions: {}
   })
+}
+
+export async function deleteCard(cardId) {
+  await remove(ref(db, `cards/${cardId}`))
+}
+
+export async function editCard(cardId, newText) {
+  await update(ref(db, `cards/${cardId}`), { text: newText, edited: true })
 }
 
 export async function toggleLike(cardId, currentUser) {
@@ -58,4 +80,17 @@ export function getTimeLeft(createdAt) {
   const h = Math.floor(diff / 3600000)
   const m = Math.floor((diff % 3600000) / 60000)
   return `${h}س ${m}د`
+}
+
+// Group cards by author, sorted newest first
+export function groupCardsByAuthor(cards) {
+  const groups = {}
+  ;[...cards].reverse().forEach(card => {
+    const key = card.authorId
+    if (!groups[key]) {
+      groups[key] = { authorId: key, authorName: card.author, cards: [] }
+    }
+    groups[key].cards.push(card)
+  })
+  return Object.values(groups)
 }

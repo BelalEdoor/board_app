@@ -5,13 +5,13 @@ import {
   signInWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth'
+import { canRegister, saveUser } from '../storage'
 import styles from './AuthScreen.module.css'
 
 export default function AuthScreen({ onLogin }) {
   const [tab, setTab] = useState('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [regForm, setRegForm] = useState({ name: '', email: '', password: '' })
 
@@ -38,8 +38,15 @@ export default function AuthScreen({ onLogin }) {
     if (password.length < 6) return setError('كلمة المرور لازم تكون 6 حروف على الأقل')
     setLoading(true)
     try {
+      const allowed = await canRegister()
+      if (!allowed) {
+        setError('عذراً، المنصة وصلت للحد الأقصى من المستخدمين (2 مستخدمين)')
+        setLoading(false)
+        return
+      }
       const cred = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(cred.user, { displayName: name })
+      await saveUser(cred.user.uid, name, email)
       onLogin({ username: cred.user.uid, name })
     } catch (err) {
       setError(getArabicError(err.code))
@@ -65,77 +72,24 @@ export default function AuthScreen({ onLogin }) {
       <div className={styles.box}>
         <div className={styles.logo}>✦ BŌARD</div>
         <div className={styles.tagline}>شارك أفكارك مع العالم</div>
-
         <div className={styles.tabs}>
-          <button
-            className={`${styles.tabBtn} ${tab === 'login' ? styles.active : ''}`}
-            onClick={() => { setTab('login'); setError('') }}
-          >تسجيل الدخول</button>
-          <button
-            className={`${styles.tabBtn} ${tab === 'register' ? styles.active : ''}`}
-            onClick={() => { setTab('register'); setError('') }}
-          >إنشاء حساب</button>
+          <button className={`${styles.tabBtn} ${tab === 'login' ? styles.active : ''}`} onClick={() => { setTab('login'); setError('') }}>تسجيل الدخول</button>
+          <button className={`${styles.tabBtn} ${tab === 'register' ? styles.active : ''}`} onClick={() => { setTab('register'); setError('') }}>إنشاء حساب</button>
         </div>
-
         {tab === 'login' ? (
           <form onSubmit={handleLogin}>
-            <div className={styles.field}>
-              <label>الإيميل</label>
-              <input
-                type="email"
-                placeholder="example@email.com"
-                value={loginForm.email}
-                onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))}
-              />
-            </div>
-            <div className={styles.field}>
-              <label>كلمة المرور</label>
-              <input
-                type="password"
-                placeholder="أدخل كلمة المرور"
-                value={loginForm.password}
-                onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
-              />
-            </div>
-            <button type="submit" className={styles.submitBtn} disabled={loading}>
-              {loading ? 'جاري الدخول...' : 'دخول'}
-            </button>
+            <div className={styles.field}><label>الإيميل</label><input type="email" placeholder="example@email.com" value={loginForm.email} onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))} /></div>
+            <div className={styles.field}><label>كلمة المرور</label><input type="password" placeholder="أدخل كلمة المرور" value={loginForm.password} onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))} /></div>
+            <button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'جاري الدخول...' : 'دخول'}</button>
           </form>
         ) : (
           <form onSubmit={handleRegister}>
-            <div className={styles.field}>
-              <label>الاسم الكامل</label>
-              <input
-                type="text"
-                placeholder="اسمك الكامل"
-                value={regForm.name}
-                onChange={e => setRegForm(p => ({ ...p, name: e.target.value }))}
-              />
-            </div>
-            <div className={styles.field}>
-              <label>الإيميل</label>
-              <input
-                type="email"
-                placeholder="example@email.com"
-                value={regForm.email}
-                onChange={e => setRegForm(p => ({ ...p, email: e.target.value }))}
-              />
-            </div>
-            <div className={styles.field}>
-              <label>كلمة المرور</label>
-              <input
-                type="password"
-                placeholder="6 حروف على الأقل"
-                value={regForm.password}
-                onChange={e => setRegForm(p => ({ ...p, password: e.target.value }))}
-              />
-            </div>
-            <button type="submit" className={styles.submitBtn} disabled={loading}>
-              {loading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}
-            </button>
+            <div className={styles.field}><label>الاسم الكامل</label><input type="text" placeholder="اسمك الكامل" value={regForm.name} onChange={e => setRegForm(p => ({ ...p, name: e.target.value }))} /></div>
+            <div className={styles.field}><label>الإيميل</label><input type="email" placeholder="example@email.com" value={regForm.email} onChange={e => setRegForm(p => ({ ...p, email: e.target.value }))} /></div>
+            <div className={styles.field}><label>كلمة المرور</label><input type="password" placeholder="6 حروف على الأقل" value={regForm.password} onChange={e => setRegForm(p => ({ ...p, password: e.target.value }))} /></div>
+            <button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'جاري الإنشاء...' : 'إنشاء الحساب'}</button>
           </form>
         )}
-
         {error && <div className={styles.error}>{error}</div>}
       </div>
     </div>

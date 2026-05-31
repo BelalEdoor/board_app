@@ -26,11 +26,9 @@
   letter-spacing: -0.5px;
 }
 
-.right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.right { display: flex; align-items: center; gap: 10px; }
+
+.notifStatus { font-size: 16px; }
 
 .pill {
   font-size: 13px;
@@ -53,10 +51,7 @@
   transition: all 0.2s;
 }
 
-.logoutBtn:hover {
-  background: var(--surface2);
-  color: var(--text);
-}
+.logoutBtn:hover { background: var(--surface2); color: var(--text); }
 
 .composeArea {
   max-width: 620px;
@@ -72,10 +67,7 @@
   padding: 1.1rem;
 }
 
-.previewWrap {
-  position: relative;
-  margin-bottom: 10px;
-}
+.previewWrap { position: relative; margin-bottom: 10px; }
 
 .preview {
   width: 100%;
@@ -100,10 +92,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
 }
-
-.removeMedia:hover { background: rgba(0,0,0,0.8); }
 
 .textarea {
   width: 100%;
@@ -128,11 +117,7 @@
   border-top: 0.5px solid var(--border);
 }
 
-.footerLeft {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.footerLeft { display: flex; align-items: center; gap: 10px; }
 
 .mediaBtn {
   font-size: 12px;
@@ -145,15 +130,9 @@
   transition: all 0.2s;
 }
 
-.mediaBtn:hover {
-  color: var(--text);
-  background: var(--bg);
-}
+.mediaBtn:hover { color: var(--text); }
 
-.charCount {
-  font-size: 12px;
-  color: var(--text3);
-}
+.charCount { font-size: 12px; color: var(--text3); }
 
 .publishBtn {
   background: var(--text);
@@ -173,36 +152,23 @@
   text-align: center;
   font-size: 12px;
   color: var(--text3);
-  margin: 0.9rem 0 0;
-  padding: 0 1rem;
+  margin: 1rem 0 0.5rem;
 }
 
-.board {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  padding: 0 1rem;
-  margin-top: 0.5rem;
+.stacksGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem 2rem;
+  padding: 2rem 1.5rem 4rem;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .empty {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   text-align: center;
   color: var(--text3);
+  padding: 3rem;
 }
 
-.empty span {
-  display: block;
-  font-size: 30px;
-  margin-bottom: 10px;
-}
-
+.empty span { display: block; font-size: 28px; margin-bottom: 10px; }
 .empty p { font-size: 14px; }
-
-.notifStatus {
-  font-size: 16px;
-  cursor: default;
-}

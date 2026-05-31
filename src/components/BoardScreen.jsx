@@ -1,24 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
-import { addCard, subscribeCards } from '../storage'
+import { useState, useEffect } from 'react'
+import { addCard, subscribeCards, groupCardsByAuthor } from '../storage'
 import { initNotifications, notifyNewCard } from '../notifications'
-import Card from './Card'
+import CardStack from './CardStack'
 import styles from './BoardScreen.module.css'
-
-function computePositions(cards, boardWidth) {
-  const cardW = 240, cardH = 220, marginX = 28, marginY = 28, topOffset = 70
-  const cols = Math.max(1, Math.floor((boardWidth - marginX * 2) / (cardW + marginX)))
-  const totalColWidth = cols * (cardW + marginX) - marginX
-  const startX = (boardWidth - totalColWidth) / 2
-  return cards.map((_, i) => {
-    const col = i % cols, row = Math.floor(i / cols), seed = i * 1337
-    const jx = ((seed * 9301 + 49297) % 233280) / 233280 * 28 - 14
-    const jy = ((seed * 6271 + 28411) % 134456) / 134456 * 18 - 9
-    return {
-      x: Math.max(marginX, startX + col * (cardW + marginX) + jx),
-      y: Math.max(topOffset, topOffset + row * (cardH + marginY) + jy),
-    }
-  })
-}
 
 const ACCEPTED = 'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm'
 
@@ -27,11 +11,9 @@ export default function BoardScreen({ user, onLogout }) {
   const [text, setText] = useState('')
   const [mediaPreview, setMediaPreview] = useState(null)
   const [mediaData, setMediaData] = useState(null)
-  const [boardWidth, setBoardWidth] = useState(800)
   const [publishing, setPublishing] = useState(false)
   const [notifEnabled, setNotifEnabled] = useState(false)
-  const boardRef = useRef(null)
-  const fileRef = useRef(null)
+  const fileRef = { current: null }
 
   useEffect(() => {
     const unsub = subscribeCards(setCards)
@@ -39,18 +21,10 @@ export default function BoardScreen({ user, onLogout }) {
   }, [])
 
   useEffect(() => {
-    const obs = new ResizeObserver(entries => {
-      const w = entries[0].contentRect.width
-      if (w > 0) setBoardWidth(w)
-    })
-    if (boardRef.current) obs.observe(boardRef.current)
-    return () => obs.disconnect()
-  }, [])
-
-  // Auto-request notifications on login
-  useEffect(() => {
     initNotifications(user.username).then(ok => setNotifEnabled(ok))
   }, [user.username])
+
+  function handleFileRef(el) { fileRef.current = el }
 
   function handleFile(e) {
     const file = e.target.files[0]
@@ -80,7 +54,6 @@ export default function BoardScreen({ user, onLogout }) {
       mediaType: mediaData?.type || null,
     }
     await addCard(card)
-    // Send notification to all users
     await notifyNewCard(user.name, text.trim())
     setText('')
     setMediaPreview(null)
@@ -88,22 +61,20 @@ export default function BoardScreen({ user, onLogout }) {
     setPublishing(false)
   }
 
-  const positions = computePositions(cards, boardWidth)
-  const boardHeight = cards.length === 0 ? 400 : Math.max(440, Math.max(...positions.map(p => p.y)) + 300)
+  const groups = groupCardsByAuthor(cards)
 
   return (
     <div className={styles.wrapper}>
       <header className={styles.topbar}>
         <div className={styles.logo}>✦ BŌARD</div>
         <div className={styles.right}>
-          <span className={styles.notifStatus} title={notifEnabled ? 'الإشعارات مفعّلة' : 'الإشعارات غير مفعّلة'}>
-            {notifEnabled ? '🔔' : '🔕'}
-          </span>
+          <span className={styles.notifStatus}>{notifEnabled ? '🔔' : '🔕'}</span>
           <span className={styles.pill}>👤 {user.name}</span>
           <button className={styles.logoutBtn} onClick={onLogout}>خروج</button>
         </div>
       </header>
 
+      {/* Compose */}
       <div className={styles.composeArea}>
         <div className={styles.composeBox}>
           {mediaPreview && (
@@ -124,8 +95,8 @@ export default function BoardScreen({ user, onLogout }) {
           />
           <div className={styles.composeFooter}>
             <div className={styles.footerLeft}>
-              <button className={styles.mediaBtn} onClick={() => fileRef.current.click()}>📎 صورة / فيديو</button>
-              <input ref={fileRef} type="file" accept={ACCEPTED} style={{ display: 'none' }} onChange={handleFile} />
+              <button className={styles.mediaBtn} onClick={() => fileRef.current?.click()}>📎 صورة / فيديو</button>
+              <input ref={handleFileRef} type="file" accept={ACCEPTED} style={{ display: 'none' }} onChange={handleFile} />
               <span className={styles.charCount}>{text.length} / 280</span>
             </div>
             <button className={styles.publishBtn} onClick={publish} disabled={(!text.trim() && !mediaData) || publishing}>
@@ -135,14 +106,26 @@ export default function BoardScreen({ user, onLogout }) {
         </div>
       </div>
 
+      {/* Stats */}
       <div className={styles.boardStats}>
-        {cards.length > 0 ? `${cards.length} بطاقة نشطة — تختفي بعد 24 ساعة` : 'اللوحة فارغة — كن أول من ينشر!'}
+        {cards.length > 0
+          ? `${cards.length} بطاقة نشطة من ${groups.length} مستخدم — تختفي بعد 24 ساعة`
+          : 'اللوحة فارغة — كن أول من ينشر!'}
       </div>
 
-      <div ref={boardRef} className={styles.board} style={{ minHeight: boardHeight }}>
-        {cards.length === 0 && <div className={styles.empty}><span>✦</span><p>لا توجد بطاقات بعد</p></div>}
-        {cards.map((card, i) => (
-          <Card key={card.id} card={card} index={i} position={positions[i] || { x: 20, y: 70 }} currentUser={user.username} currentUserName={user.name} />
+      {/* Stacks */}
+      <div className={styles.stacksGrid}>
+        {groups.length === 0 && (
+          <div className={styles.empty}><span>✦</span><p>لا توجد بطاقات بعد</p></div>
+        )}
+        {groups.map((group, i) => (
+          <CardStack
+            key={group.authorId}
+            group={group}
+            index={i}
+            currentUser={user.username}
+            currentUserName={user.name}
+          />
         ))}
       </div>
     </div>
