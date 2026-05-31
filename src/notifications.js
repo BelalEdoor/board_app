@@ -10,7 +10,13 @@ export async function initNotifications(userId) {
     if (permission !== 'granted') return false
 
     const messaging = getMessaging()
-    const token = await getToken(messaging, { vapidKey: VAPID_KEY })
+
+    // Register SW manually with correct path for GitHub Pages subdirectory
+    const swReg = await navigator.serviceWorker.register('/board_app/firebase-messaging-sw.js', {
+      scope: '/board_app/'
+    })
+
+    const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg })
 
     if (token) {
       await fetch(`${BACKEND_URL}/register-token`, {
