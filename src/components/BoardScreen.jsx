@@ -29,7 +29,7 @@ export default function BoardScreen({ user, onLogout }) {
   function handleFile(e) {
     const file = e.target.files[0]
     if (!file) return
-    if (file.size > 2 * 1024 * 1024) { alert('الحد الأقصى 2MB'); return }
+    if (file.size > 100 * 1024 * 1024) { alert('الحد الأقصى 100MB'); return }
     const isVideo = file.type.startsWith('video/')
     const reader = new FileReader()
     reader.onload = ev => {
@@ -101,7 +101,7 @@ export default function BoardScreen({ user, onLogout }) {
             </div>
             <button className={styles.publishBtn} onClick={publish} disabled={(!text.trim() && !mediaData) || publishing}>
               {publishing ? 'جاري النشر...' : 'نشر البطاقة'}
-            </button>
+            </button>  
           </div>
         </div>
       </div>
