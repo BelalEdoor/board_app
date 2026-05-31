@@ -1,0 +1,109 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg);
+}
+
+.box {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: -1px;
+}
+
+.tagline {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 2rem;
+}
+
+.tabs {
+  display: flex;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  transition: all 0.2s;
+}
+
+.tabBtn.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field input:focus {
+  border-color: var(--text3);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 12px;
+  background: var(--text);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  transition: opacity 0.2s;
+  margin-top: 0.5rem;
+}
+
+.submitBtn:hover { opacity: 0.85; }
+
+.error {
+  font-size: 13px;
+  color: #c0392b;
+  text-align: center;
+  margin-top: 0.75rem;
+  min-height: 18px;
+}
