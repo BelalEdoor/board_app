@@ -9,11 +9,19 @@ const STACK_COLORS = [
   { bg: '#B5D4F4', text: '#042C53' },
   { bg: '#C0DD97', text: '#173404' },
   { bg: '#CECBF6', text: '#26215C' },
+  { bg: '#D3D1C7', text: '#2C2C2A' },
+  { bg: '#F0997B', text: '#4A1B0C' },
+  { bg: '#85B7EB', text: '#042C53' },
+  { bg: '#5DCAA5', text: '#04342C' },
+  { bg: '#AFA9EC', text: '#26215C' },
+  { bg: '#F5C4B3', text: '#4A1B0C' },
 ]
 
 export default function CardStack({ group, index, currentUser, currentUserName }) {
   const [expanded, setExpanded] = useState(false)
-  const color = STACK_COLORS[index % STACK_COLORS.length]
+  // Use colorIndex from group (assigned by appearance order) to guarantee unique colors
+  const colorIndex = group.colorIndex ?? index
+  const color = STACK_COLORS[colorIndex % STACK_COLORS.length]
   const count = group.cards.length
 
   return (
@@ -57,7 +65,7 @@ export default function CardStack({ group, index, currentUser, currentUserName }
               <Card
                 key={card.id}
                 card={card}
-                colorIndex={index}
+                colorIndex={colorIndex}
                 currentUser={currentUser}
                 currentUserName={currentUserName}
               />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { auth } from '../firebase'
 import {
   createUserWithEmailAndPassword,
@@ -12,8 +12,16 @@ export default function AuthScreen({ onLogin }) {
   const [tab, setTab] = useState('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [registrationFull, setRegistrationFull] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [regForm, setRegForm] = useState({ name: '', email: '', password: '' })
+
+  // Check on mount if registration is still open
+  useEffect(() => {
+    canRegister().then(allowed => {
+      if (!allowed) setRegistrationFull(true)
+    })
+  }, [])
 
   async function handleLogin(e) {
     e.preventDefault()
@@ -40,6 +48,7 @@ export default function AuthScreen({ onLogin }) {
     try {
       const allowed = await canRegister()
       if (!allowed) {
+        setRegistrationFull(true)
         setError('عذراً، المنصة وصلت للحد الأقصى من المستخدمين (2 مستخدمين)')
         setLoading(false)
         return
@@ -74,7 +83,14 @@ export default function AuthScreen({ onLogin }) {
         <div className={styles.tagline}>شارك أفكارك مع العالم</div>
         <div className={styles.tabs}>
           <button className={`${styles.tabBtn} ${tab === 'login' ? styles.active : ''}`} onClick={() => { setTab('login'); setError('') }}>تسجيل الدخول</button>
-          <button className={`${styles.tabBtn} ${tab === 'register' ? styles.active : ''}`} onClick={() => { setTab('register'); setError('') }}>إنشاء حساب</button>
+          <button
+            className={`${styles.tabBtn} ${tab === 'register' ? styles.active : ''} ${registrationFull ? styles.tabDisabled : ''}`}
+            onClick={() => { if (!registrationFull) { setTab('register'); setError('') } }}
+            title={registrationFull ? 'التسجيل مغلق — المنصة اكتملت' : ''}
+          >
+            إنشاء حساب
+            {registrationFull && <span className={styles.fullBadge}>مكتمل</span>}
+          </button>
         </div>
         {tab === 'login' ? (
           <form onSubmit={handleLogin}>
@@ -82,6 +98,12 @@ export default function AuthScreen({ onLogin }) {
             <div className={styles.field}><label>كلمة المرور</label><input type="password" placeholder="أدخل كلمة المرور" value={loginForm.password} onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))} /></div>
             <button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'جاري الدخول...' : 'دخول'}</button>
           </form>
+        ) : registrationFull ? (
+          <div className={styles.fullNotice}>
+            <span className={styles.fullIcon}>🔒</span>
+            <p>عذراً، المنصة وصلت للحد الأقصى من المستخدمين.</p>
+            <p className={styles.fullSub}>يُسمح بـ <strong>حسابين فقط</strong> على هذه المنصة.</p>
+          </div>
         ) : (
           <form onSubmit={handleRegister}>
             <div className={styles.field}><label>الاسم الكامل</label><input type="text" placeholder="اسمك الكامل" value={regForm.name} onChange={e => setRegForm(p => ({ ...p, name: e.target.value }))} /></div>
